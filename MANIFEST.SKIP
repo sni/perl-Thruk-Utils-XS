@@ -1,0 +1,5 @@
+blib
+.git/
+.gitignore
+.*\.o$
+MANIFEST.bak

@@ -1,0 +1,6 @@
+Revision history for Perl extension Thruk::Utils::XS.
+
+0.01  Tue Sep  9 11:03:08 2014
+	- original version; created by h2xs 1.23 with options
+		-O -n Thruk::Utils::XS Thruk-Utils-XS/utils/utils.h
+
