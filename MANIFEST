@@ -7,13 +7,11 @@ lib/Thruk/Utils/XS.pm
 Makefile
 Makefile.PL
 MANIFEST
-MANIFEST.bak
 MANIFEST.SKIP
 ppport.h
 README
 t/Thruk-Utils-XS.t
 Thruk-Utils-XS.xs
-utils/libutils.a
 utils/Makefile
 utils/Makefile.PL
 utils/threadpool.c

@@ -16,7 +16,7 @@ MODULE = Thruk::Utils::XS		PACKAGE = Thruk::Utils::XS
 
 INCLUDE: const-xs.inc
 
-SV * pool_do(size, data)
+SV * socket_pool_do(size, data)
     int     size
     SV    * data
 
@@ -46,3 +46,4 @@ SV * pool_do(size, data)
         RETVAL = newRV((SV *)results);
     OUTPUT:
         RETVAL
+

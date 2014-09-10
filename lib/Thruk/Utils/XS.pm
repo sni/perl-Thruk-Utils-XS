@@ -40,53 +40,30 @@ XSLoader::load('Thruk::Utils::XS', $VERSION);
 
 1;
 __END__
-# Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
-Thruk::Utils::XS - Perl extension for blah blah blah
+Thruk::Utils::XS - Thruk XS Utils
 
 =head1 SYNOPSIS
 
   use Thruk::Utils::XS;
-  blah blah blah
 
 =head1 DESCRIPTION
 
-Stub documentation for Thruk::Utils::XS, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
-
-=head2 EXPORT
-
-None by default.
-
-
+Thruk::Utils::XS will be used automatically if available.
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+More information about Thruk is available on http://www.thruk.org
 
 =head1 AUTHOR
 
-sven, E<lt>sven@E<gt>
+Sven Nierlein, 2009-2014, <sven@nierlein.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2014 by sven
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.14.2 or,
-at your option, any later version of Perl 5 you may have available.
-
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
