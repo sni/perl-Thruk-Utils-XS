@@ -9,9 +9,6 @@
 
 #include "const-c.inc"
 
-extern char * pool_results[MAX_POOL_SIZE];
-extern int pool_results_nr;
-
 MODULE = Thruk::Utils::XS		PACKAGE = Thruk::Utils::XS
 
 INCLUDE: const-xs.inc
@@ -25,6 +22,8 @@ SV * socket_pool_do(size, data)
         AV * results;
         SSize_t numresults = 0, n;
         int i;
+        char ** pool_results;
+        int pool_results_nr;
         SvGETMAGIC(data);
         if ((!SvROK(data))
             || (SvTYPE(SvRV(data)) != SVt_PVAV)
@@ -34,13 +33,14 @@ SV * socket_pool_do(size, data)
         }
         numresults++; // increase by one to get the size, not the last index
         results = (AV *)sv_2mortal((SV *)newAV());
+        pool_results = malloc(numresults / 4 * sizeof(char*));
     CODE:
         arg = malloc(numresults * sizeof(char*));
         for(n=0; n < numresults; n++) {
             STRLEN l;
             arg[n] = strdup(SvPV(*av_fetch((AV *)SvRV(data), n, 0), l));
         }
-        socket_pool_work(size, arg, numresults);
+        pool_results_nr = socket_pool_work(size, arg, numresults, pool_results);
         free(arg);
         for(n = 0; n < pool_results_nr; n++) {
             HV * rh;
@@ -57,6 +57,7 @@ SV * socket_pool_do(size, data)
             free(result->result);
             free(result);
         }
+        free(pool_results);
         RETVAL = newRV((SV *)results);
     OUTPUT:
         RETVAL

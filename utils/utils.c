@@ -1,12 +1,12 @@
 #include "./utils.h"
 
 threadpool_t *threadpool;
-char * pool_results[MAX_POOL_SIZE];
+char ** pool_results_list;
 int pool_results_nr;
 
 /* store result of threads */
 void main_func(void *s) {
-    pool_results[pool_results_nr] = s;
+    pool_results_list[pool_results_nr] = s;
     pool_results_nr++;
 }
 
@@ -153,7 +153,7 @@ void wakeup(void *pp) {
         perror("write");
 }
 
-int socket_pool_work(int poolsize, char ** data, int numdata) {
+int socket_pool_work(int poolsize, char ** data, int numdata, char ** pool_results) {
     int i, rc;
     int p[2];
     int done;
@@ -162,6 +162,7 @@ int socket_pool_work(int poolsize, char ** data, int numdata) {
         perror("pipe");
         exit(1);
     }
+    pool_results_list = pool_results;
     threadpool = threadpool_create(poolsize, wakeup, (void*)p);
     if(threadpool == NULL) {
         perror("threadpool_create");
@@ -207,5 +208,5 @@ int socket_pool_work(int poolsize, char ** data, int numdata) {
         abort();
     close(p[0]);
     close(p[1]);
-    return 0;
+    return pool_results_nr;
 }
