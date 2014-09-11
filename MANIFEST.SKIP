@@ -4,3 +4,4 @@ blib
 .*\.o$
 .*\.a$
 MANIFEST.bak
+.*\.gz$

@@ -8,12 +8,17 @@ Makefile
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
+MYMETA.json
+MYMETA.yml
 ppport.h
 README
 t/Thruk-Utils-XS.t
+THANKS
 Thruk-Utils-XS.xs
 utils/Makefile
 utils/Makefile.PL
+utils/MYMETA.json
+utils/MYMETA.yml
 utils/threadpool.c
 utils/threadpool.h
 utils/utils.c
