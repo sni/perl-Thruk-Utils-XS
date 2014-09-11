@@ -14,3 +14,5 @@ MYMETA.yml
 utils/MYMETA.json
 utils/MYMETA.yml
 *.gz
+Makefile.old
+utils/Makefile.old
