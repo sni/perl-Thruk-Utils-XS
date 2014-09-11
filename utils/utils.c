@@ -4,22 +4,31 @@ threadpool_t *threadpool;
 char * pool_results[MAX_POOL_SIZE];
 int pool_results_nr;
 
+/* store result of threads */
+void main_func(void *s) {
+    pool_results[pool_results_nr] = s;
+    pool_results_nr++;
+}
+
 /* open local socket connection */
 int open_local_socket(char *socket_path) {
     struct sockaddr_un address;
     struct stat st;
     struct timeval tv;
+    char * error_string;
     int input_socket;
     tv.tv_sec  = 5;  /* 5 seconds timeout should be enough for local sockets */
     tv.tv_usec = 0;
 
     if (0 != stat(socket_path, &st)) {
-        printf("no unix socket %s existing\n", socket_path);
+        asprintf(&error_string, "unix socket %s does not exist\n", socket_path);
+        threadpool_schedule_back(threadpool, main_func, error_string);
         return(-1);
     }
 
     if((input_socket=socket (PF_LOCAL, SOCK_STREAM, 0)) <= 0) {
-        printf("creating socket failed: %s\n", strerror(errno));
+        asprintf(&error_string, "creating socket failed: %s\n", strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, error_string);
         return(-1);
     }
 
@@ -30,16 +39,12 @@ int open_local_socket(char *socket_path) {
     setsockopt(input_socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
     if(!connect(input_socket, (struct sockaddr *) &address, sizeof (address)) == 0) {
-        printf("connecting socket failed: %s\n", strerror(errno));
+        asprintf(&error_string, "connecting socket failed: %s\n", strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, error_string);
         close(input_socket);
         return(-1);
     }
     return(input_socket);
-}
-
-void main_func(void *s) {
-    pool_results[pool_results_nr] = s;
-    pool_results_nr++;
 }
 
 void thread_func(void *raw) {
@@ -54,6 +59,7 @@ void thread_func(void *raw) {
     int result_size;
     int total_read;
     char *result_string;
+    char *error_string;
     pool_data_t * data = (pool_data_t*)raw;
     char *send_header = "ResponseHeader: fixed16\nOutputFormat: wrapped_json\n\n"; /* dataset sep, column sep, list sep, host/svc list sep */
 
@@ -62,7 +68,8 @@ void thread_func(void *raw) {
     if(input_socket == -1) { return; }
     size = send(input_socket, data->text, strlen(data->text), 0);
     if( size <= 0) {
-        printf("sending to socket failed : %s\n", strerror(errno));
+        asprintf(&error_string, "sending to socket failed : %s\n", strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, error_string);
         close(input_socket);
         input_socket = -1;
         return;
@@ -74,9 +81,15 @@ void thread_func(void *raw) {
 
     size = read(input_socket, header, 16);
     if( size < 16) {
-        printf("reading socket failed (%d bytes read): %s\n", size, strerror(errno));
-        if(size > 0)
-            printf("got header: '%s'\n", header);
+        asprintf(&error_string, "reading socket failed (%d bytes read): %s\n", size, strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, error_string);
+        close(input_socket);
+        input_socket = -1;
+        return;
+    }
+    if(size < 16 && size > 0) {
+        asprintf(&error_string, "got header: '%s'\n", header);
+        threadpool_schedule_back(threadpool, main_func, error_string);
         close(input_socket);
         input_socket = -1;
         return;
@@ -86,7 +99,8 @@ void thread_func(void *raw) {
     buffer[3] = '\0';
     return_code = atoi(buffer);
     if( return_code != 200) {
-        printf("query failed: %d\nquery:\n---\n%s\n---\n", return_code, data->text);
+        asprintf(&error_string, "query failed: %d\nquery:\n---\n%s\n---\n", return_code, data->text);
+        threadpool_schedule_back(threadpool, main_func, error_string);
         close(input_socket);
         input_socket = -1;
         return;
@@ -108,7 +122,8 @@ void thread_func(void *raw) {
             break;
     }
     if( size <= 0 || total_read != result_size) {
-        printf("reading socket failed (%d bytes read, expected %d): %s\n", total_read, result_size, strerror(errno));
+        asprintf(&error_string, "reading socket failed (%d bytes read, expected %d): %s\n", total_read, result_size, strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, error_string);
         free(result_string);
         close(input_socket);
         input_socket = -1;
