@@ -21,7 +21,7 @@ SV * socket_pool_do(size, data)
     SV    * data
 
     INIT:
-        char * arg[MAX_POOL_SIZE];
+        char ** arg;
         AV * results;
         SSize_t numresults = 0, n;
         int i;
@@ -32,13 +32,16 @@ SV * socket_pool_do(size, data)
         {
             XSRETURN_UNDEF;
         }
+        numresults++; // increase by one to get the size, not the last index
         results = (AV *)sv_2mortal((SV *)newAV());
     CODE:
-        for(n = 0; n <= numresults; n++) {
+        arg = malloc(numresults * sizeof(char*));
+        for(n=0; n < numresults; n++) {
             STRLEN l;
             arg[n] = strdup(SvPV(*av_fetch((AV *)SvRV(data), n, 0), l));
         }
         socket_pool_work(size, arg, numresults);
+        free(arg);
         for(n = 0; n < pool_results_nr; n++) {
             HV * rh;
             pool_result_t * result = (pool_result_t*)pool_results[n];

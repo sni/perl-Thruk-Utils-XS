@@ -19,7 +19,7 @@
 #define FALSE  0
 #endif
 
-#define MAX_POOL_SIZE 1000
+#define MAX_POOL_SIZE 10000
 
 typedef struct pool_data_struct {
     int    num;
