@@ -6,14 +6,13 @@ WriteMakefile(
     NAME              => 'Thruk::Utils::XS',
     VERSION_FROM      => 'lib/Thruk/Utils/XS.pm', # finds $VERSION
     PREREQ_PM         => {}, # e.g., Module::Name => 1.1
-    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/Thruk/Utils/XS.pm', # retrieve abstract from module
-       AUTHOR         => 'sven <sven@>') : ()),
-    LIBS              => [''], # e.g., '-lm'
+    ABSTRACT_FROM     => 'lib/Thruk/Utils/XS.pm',
+    AUTHOR            => 'Sven Nierlein <sven.nierlein@consol.de>',
+    LIBS              => ['-lpthread'], # e.g., '-lm'
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
     INC               => '-I.', # e.g., '-I. -I/usr/include/other'
     MYEXTLIB          => 'utils/libutils$(LIB_EXT)',
-	# Un-comment this if you add C files to link with later:
+    # Un-comment this if you add C files to link with later:
     # OBJECT            => '$(O_FILES)', # link all the C files too
 );
 if  (eval {require ExtUtils::Constant; 1}) {
