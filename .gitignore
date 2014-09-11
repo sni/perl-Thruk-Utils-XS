@@ -9,3 +9,8 @@ utils/libutils.a
 utils/threadpool.o
 utils/utils.o
 MANIFEST.bak
+MYMETA.json
+MYMETA.yml
+utils/MYMETA.json
+utils/MYMETA.yml
+*.gz
