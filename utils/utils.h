@@ -11,9 +11,26 @@
 
 #include "threadpool.h"
 
+#if !defined TRUE
+#define TRUE   1
+#endif
+
+#if !defined FALSE
+#define FALSE  0
+#endif
+
 #define MAX_POOL_SIZE 1000
 
 typedef struct pool_data_struct {
+    int    num;
+    char * key;
     char * socket;
     char * text;
 } pool_data_t;
+
+typedef struct pool_result_struct {
+    int    num;
+    char * key;
+    int    success;
+    char * result;
+} pool_result_t;

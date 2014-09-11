@@ -38,12 +38,22 @@ SV * socket_pool_do(size, data)
             STRLEN l;
             arg[n] = strdup(SvPV(*av_fetch((AV *)SvRV(data), n, 0), l));
         }
-        pool_work(size, arg, numresults);
+        socket_pool_work(size, arg, numresults);
         for(n = 0; n < pool_results_nr; n++) {
-            av_push(results, newSVpv(pool_results[n], strlen(pool_results[n])));
-            free(pool_results[n]);
+            HV * rh;
+            pool_result_t * result = (pool_result_t*)pool_results[n];
+            rh = (HV *)sv_2mortal((SV *)newHV());
+
+            hv_store(rh, "num",     3, newSVnv(result->num),                              0);
+            hv_store(rh, "key",     3, newSVpv(result->key, strlen(result->key)),         0);
+            hv_store(rh, "success", 7, newSVnv(result->success),                          0);
+            hv_store(rh, "result",  6, newSVpv(result->result, strlen(result->result)),   0);
+
+            av_push(results, newRV((SV *)rh));
+            free(result->key);
+            free(result->result);
+            free(result);
         }
         RETVAL = newRV((SV *)results);
     OUTPUT:
         RETVAL
-

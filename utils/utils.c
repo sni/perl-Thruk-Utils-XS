@@ -11,36 +11,35 @@ void main_func(void *s) {
 }
 
 /* open local socket connection */
-int open_local_socket(char *socket_path) {
+int open_local_socket(pool_data_t * pool_data, pool_result_t * pool_result) {
     struct sockaddr_un address;
     struct stat st;
     struct timeval tv;
-    char * error_string;
     int input_socket;
     tv.tv_sec  = 5;  /* 5 seconds timeout should be enough for local sockets */
     tv.tv_usec = 0;
 
-    if (0 != stat(socket_path, &st)) {
-        asprintf(&error_string, "unix socket %s does not exist\n", socket_path);
-        threadpool_schedule_back(threadpool, main_func, error_string);
+    if (0 != stat(pool_data->socket, &st)) {
+        asprintf(&pool_result->result, "unix socket %s does not exist\n", pool_data->socket);
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         return(-1);
     }
 
     if((input_socket=socket (PF_LOCAL, SOCK_STREAM, 0)) <= 0) {
-        asprintf(&error_string, "creating socket failed: %s\n", strerror(errno));
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "creating socket failed: %s\n", strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         return(-1);
     }
 
     memset(&address, 0, sizeof(address));
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, socket_path);
+    strcpy(address.sun_path, pool_data->socket);
     setsockopt(input_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     setsockopt(input_socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
     if(!connect(input_socket, (struct sockaddr *) &address, sizeof (address)) == 0) {
-        asprintf(&error_string, "connecting socket failed: %s\n", strerror(errno));
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "connecting socket failed: %s\n", strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         return(-1);
     }
@@ -61,15 +60,21 @@ void thread_func(void *raw) {
     char *result_string;
     char *error_string;
     pool_data_t * data = (pool_data_t*)raw;
+    pool_result_t *pool_result;
     char *send_header = "ResponseHeader: fixed16\nOutputFormat: wrapped_json\n\n"; /* dataset sep, column sep, list sep, host/svc list sep */
 
+    pool_result = malloc(sizeof(pool_result_t));
+    pool_result->key     = data->key;
+    pool_result->num     = data->num;
+    pool_result->success = FALSE;
+
     /* get data from socket */
-    input_socket = open_local_socket(data->socket);
+    input_socket = open_local_socket(data, pool_result);
     if(input_socket == -1) { return; }
     size = send(input_socket, data->text, strlen(data->text), 0);
     if( size <= 0) {
-        asprintf(&error_string, "sending to socket failed : %s\n", strerror(errno));
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "sending to socket failed : %s\n", strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
         return;
@@ -81,15 +86,15 @@ void thread_func(void *raw) {
 
     size = read(input_socket, header, 16);
     if( size < 16) {
-        asprintf(&error_string, "reading socket failed (%d bytes read): %s\n", size, strerror(errno));
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "reading socket failed (%d bytes read): %s\n", size, strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
         return;
     }
     if(size < 16 && size > 0) {
-        asprintf(&error_string, "got header: '%s'\n", header);
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "got header: '%s'\n", header);
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
         return;
@@ -99,8 +104,8 @@ void thread_func(void *raw) {
     buffer[3] = '\0';
     return_code = atoi(buffer);
     if( return_code != 200) {
-        asprintf(&error_string, "query failed: %d\nquery:\n---\n%s\n---\n", return_code, data->text);
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "query failed: %d\nquery:\n---\n%s\n---\n", return_code, data->text);
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
         return;
@@ -122,8 +127,8 @@ void thread_func(void *raw) {
             break;
     }
     if( size <= 0 || total_read != result_size) {
-        asprintf(&error_string, "reading socket failed (%d bytes read, expected %d): %s\n", total_read, result_size, strerror(errno));
-        threadpool_schedule_back(threadpool, main_func, error_string);
+        asprintf(&pool_result->result, "reading socket failed (%d bytes read, expected %d): %s\n", total_read, result_size, strerror(errno));
+        threadpool_schedule_back(threadpool, main_func, pool_result);
         free(result_string);
         close(input_socket);
         input_socket = -1;
@@ -134,7 +139,9 @@ void thread_func(void *raw) {
 
     struct timeval tv = {0, 1000};
     select(0, NULL, NULL, NULL, &tv);
-    threadpool_schedule_back(threadpool, main_func, result_string);
+    pool_result->result  = result_string;
+    pool_result->success = TRUE;
+    threadpool_schedule_back(threadpool, main_func, pool_result);
     free(data->socket);
     free(data->text);
     free(data);
@@ -146,7 +153,7 @@ void wakeup(void *pp) {
         perror("write");
 }
 
-int pool_work(int poolsize, char ** data, int numdata) {
+int socket_pool_work(int poolsize, char ** data, int numdata) {
     int i, rc;
     int p[2];
     int done;
@@ -162,11 +169,13 @@ int pool_work(int poolsize, char ** data, int numdata) {
     }
 
     pool_results_nr = 0;
-    for(i = 1; i <= numdata; i=i+2) {
+    for(i = 0; i < numdata; i=i+4) {
         pool_data_t *pool_data;
         pool_data = malloc(sizeof(pool_data_t));
-        pool_data->socket = data[i-1];
-        pool_data->text   = data[i];
+        pool_data->num    = atoi(data[i]);
+        pool_data->key    = data[i+1];
+        pool_data->socket = data[i+2];
+        pool_data->text   = data[i+3];
         fd_set fdset;
         char buf[10];
         struct timeval tv = {0, 100};
