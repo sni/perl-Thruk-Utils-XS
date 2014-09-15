@@ -2,7 +2,7 @@ use ExtUtils::MakeMaker;
 $Verbose = 1;
 WriteMakefile(
     NAME => 'Thruk::Utils::XS::utils',
-    SKIP => [qw(all static static_lib dynamic dynamic_lib)],
+    SKIP => [qw(all static dynamic)],
     clean => {'FILES' => 'libutils$(LIB_EXT)'},
 );
 sub MY::top_targets {
