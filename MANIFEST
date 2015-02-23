@@ -12,7 +12,8 @@ MYMETA.json
 MYMETA.yml
 ppport.h
 README
-t/Thruk-Utils-XS.t
+t/01-thruk-utils-xs.t
+t/10-connection-pool.t
 THANKS
 Thruk-Utils-XS.xs
 utils/Makefile

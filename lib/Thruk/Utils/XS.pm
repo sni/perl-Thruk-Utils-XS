@@ -3,7 +3,7 @@ package Thruk::Utils::XS;
 use 5.014002;
 use strict;
 use warnings;
-use Carp;
+use Carp qw/croak/;
 
 require Exporter;
 use AutoLoader;

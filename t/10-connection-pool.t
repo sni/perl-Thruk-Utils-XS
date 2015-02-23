@@ -1,9 +1,4 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl Thruk-Utils-XS.t'
-
-#########################
-
-# change 'tests => 1' to 'tests => last_test_to_print';
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
