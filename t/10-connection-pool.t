@@ -7,6 +7,8 @@ use File::Temp;
 use Time::HiRes qw/usleep/;
 
 use Test::More tests => 11;
+use lib 'blib/lib';
+use lib 'blib/arch';
 BEGIN { use_ok('Thruk::Utils::XS') };
 
 #########################
