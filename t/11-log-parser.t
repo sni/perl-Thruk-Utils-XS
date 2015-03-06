@@ -7,7 +7,7 @@ use Data::Dumper;
 use lib 'blib/lib';
 use lib 'blib/arch';
 
-use Test::More tests => 70;
+use Test::More tests => 76;
 use_ok('Thruk::Utils::XS');
 use_ok('Monitoring::Availability::Logs');
 
@@ -57,3 +57,5 @@ __DATA__
 [1261685289] SERVICE NOTIFICATION: test_contact;i0test_host_180;i0test_random_18;OK;notify-service;mo REVOVERED: random servicecheck recovered
 [1261687372] HOST NOTIFICATION: test_contact;i0test_host_198;DOWN;notify-host;mo DOWN: random hostcheck: parent host down
 [1364135381] Event broker module '/usr/lib64/mod_gearman/mod_gearman.o' initialized successfully.
+[1264111946] SERVICE ALERT: n0_test_host_000;n0_test_pending_01;WARNING;SOFT;1;warn
+[1264111946] HOST ALERT: n0_test_host_000;DOWN;SOFT;1;down

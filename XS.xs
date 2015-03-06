@@ -130,11 +130,11 @@ SV * parse_line(line)
                 _service       = strsep(&_options, ";");
                 _state         = strsep(&_options, ";");
                 _hard          = strsep(&_options, ";");
-                                 strsep(&_options, ";");
+                                 strsep(&_options, ";"); /* attempts */
                 _plugin_output = strsep(&_options, ";");
                 hv_store(result, "host_name",  9, newSVpv(_host, strlen(_host)),   0);
                 hv_store(result, "service_description",  19, newSVpv(_service, strlen(_service)),   0);
-                hv_store(result, "hard",  4, newSVnv(strncmp(_host, "HARD", 4) ? 1:0),   0);
+                hv_store(result, "hard",  4, newSVnv(!strncmp(_hard, "HARD", 4) ? 1:0),   0);
                 hv_store(result, "plugin_output",  13, newSVpv(_plugin_output, strlen(_plugin_output)),   0);
                 if(     !strncmp(_state, "OK",       2)) { hv_store(result, "state",  5, newSVnv(0),   0); }
                 else if(!strncmp(_state, "WARNING",  7)) { hv_store(result, "state",  5, newSVnv(1),   0); }
@@ -149,10 +149,10 @@ SV * parse_line(line)
                 _host          = strsep(&_options, ";");
                 _state         = strsep(&_options, ";");
                 _hard          = strsep(&_options, ";");
-                                 strsep(&_options, ";");
+                                 strsep(&_options, ";"); /* attempts */
                 _plugin_output = strsep(&_options, ";");
                 hv_store(result, "host_name",  9, newSVpv(_host, strlen(_host)),   0);
-                hv_store(result, "hard",  4, newSVnv(strncmp(_host, "HARD", 4) ? 1:0),   0);
+                hv_store(result, "hard",  4, newSVnv(!strncmp(_hard, "HARD", 4) ? 1:0),   0);
                 hv_store(result, "plugin_output",  13, newSVpv(_plugin_output, strlen(_plugin_output)),   0);
                 if(     !strncmp(_state, "UP",           2)) { hv_store(result, "state",  5, newSVnv(0),   0); }
                 else if(!strncmp(_state, "DOWN",         4)) { hv_store(result, "state",  5, newSVnv(1),   0); }
