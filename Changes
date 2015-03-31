@@ -1,5 +1,5 @@
 Revision history for Perl extension Thruk::Utils::XS.
 
-0.01  Mon Feb 23 14:14:05 CET 2015
+0.01  Tue Mar 31 19:02:57 CEST 2015
     - added logfile parser
     - added select based connection pool
