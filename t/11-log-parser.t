@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use Devel::Peek;
 use utf8;
 
 use lib 'blib/lib';
@@ -21,6 +22,11 @@ while(my $line = <DATA>) {
     my $data2 = Monitoring::Availability::Logs::parse_line($dup);
     is_deeply($data2, $data1, "xs module returns the same data") or do {
         print STDERR Dumper("Thruk::Utils::XS:", $data1, "Monitoring::Availability::Logs:", $data2);
+        print STDERR "Monitoring::Availability::Logs::parse_line:\n";
+        Dump($data2->{'host_name'});
+        print STDERR "Thruk::Utils::XS::parse_line:\n";
+        Dump($data1->{'host_name'});
+        BAIL_OUT("failed in $0");
     }
 }
 
