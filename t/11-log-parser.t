@@ -3,21 +3,42 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use utf8;
 
 use lib 'blib/lib';
 use lib 'blib/arch';
 
-use Test::More tests => 76;
+use Test::More tests => 182;
 use_ok('Thruk::Utils::XS');
 use_ok('Monitoring::Availability::Logs');
 
+# inline
 while(my $line = <DATA>) {
     my $dup = $line;
     my $data1 = Thruk::Utils::XS::parse_line($line);
     is($line, $dup, "line is unchanged");
     chomp($dup);
     my $data2 = Monitoring::Availability::Logs::parse_line($dup);
-    is_deeply($data2, $data1, "xs module returns the same data") or print STDERR Dumper("Thruk::Utils::XS:", $data1, "Monitoring::Availability::Logs:", $data2);
+    is_deeply($data2, $data1, "xs module returns the same data") or do {
+        print STDERR Dumper("Thruk::Utils::XS:", $data1, "Monitoring::Availability::Logs:", $data2);
+    }
+}
+
+# now from files
+my $start = 0;
+open(my $fh, '<', $0);
+binmode($fh);
+while(my $line = <$fh>) {
+    $start = 1 if $line =~ m/_DATA_/mx;
+    next unless $start;
+    my $dup = $line;
+    my $data1 = Thruk::Utils::XS::parse_line($line);
+    is($line, $dup, "line is unchanged");
+    chomp($dup);
+    my $data2 = Monitoring::Availability::Logs::parse_line($dup);
+    is_deeply($data2, $data1, "xs module returns the same data") or do {
+        print STDERR Dumper("Thruk::Utils::XS:", $data1, "Monitoring::Availability::Logs:", $data2);
+    }
 }
 
 
@@ -59,3 +80,4 @@ __DATA__
 [1364135381] Event broker module '/usr/lib64/mod_gearman/mod_gearman.o' initialized successfully.
 [1264111946] SERVICE ALERT: n0_test_host_000;n0_test_pending_01;WARNING;SOFT;1;warn
 [1264111946] HOST ALERT: n0_test_host_000;DOWN;SOFT;1;down
+[1264111946] HOST ALERT: öüß;DOWN;SOFT;1;down

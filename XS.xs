@@ -64,10 +64,11 @@ SV * socket_pool_do(size, data)
 
 
 
-SV * parse_line(line)
-    const char * line
+SV * parse_line(str)
+    SV * str
 
     INIT:
+        STRLEN len;
         HV * result = (HV *)sv_2mortal((SV *)newHV());
         char * _msg;
         char * _options;
@@ -81,19 +82,18 @@ SV * parse_line(line)
         char * _from;
         char * _to;
         char * _contact;
-        char * _dup;
-        int    _msglen;
         int    _time;
 
     CODE:
-        _msg    = strdup(line);
-        _dup    = _msg;
-        _msglen = strlen(line);
+        str = sv_mortalcopy(str);
+        if(SvUTF8(str)) {
+            sv_utf8_downgrade(str, FALSE);
+        }
+        _msg = SvPV(str, len);
         /* trim line */
-        while (_msglen > 0 && isspace(_msg[_msglen-1]))
-            _msg[--_msglen] = '\0';
-        if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
-            free(_dup);
+        while (len > 0 && isspace(_msg[len-1]))
+            _msg[--len] = '\0';
+        if (len < 13 || _msg[0] != '[' || _msg[11] != ']') {
             XSRETURN_UNDEF;
             return;
         }
@@ -208,7 +208,6 @@ SV * parse_line(line)
             }
         }
 
-        free(_dup);
         RETVAL = newRV((SV *)result);
     OUTPUT:
         RETVAL
