@@ -10,6 +10,14 @@ void main_func(void *s) {
     pool_results_nr++;
 }
 
+/* free pool data structure */
+void free_pool_data(pool_data_t * data) {
+    free(data->socket);
+    free(data->text);
+    free(data);
+    return;
+}
+
 /* open local socket connection */
 int open_local_socket(pool_data_t * pool_data, pool_result_t * pool_result) {
     struct sockaddr_un address;
@@ -64,7 +72,7 @@ void thread_func(void *raw) {
     char *error_string;
     pool_data_t * data = (pool_data_t*)raw;
     pool_result_t *pool_result;
-    char *send_header = "ResponseHeader: fixed16\nOutputFormat: wrapped_json\n\n"; /* dataset sep, column sep, list sep, host/svc list sep */
+    char *send_header = "ResponseHeader: fixed16\nOutputFormat: wrapped_json\n\n";
 
     pool_result = malloc(sizeof(pool_result_t));
     pool_result->key     = data->key;
@@ -73,7 +81,10 @@ void thread_func(void *raw) {
 
     /* get data from socket */
     input_socket = open_local_socket(data, pool_result);
-    if(input_socket == -1) { return; }
+    if(input_socket == -1) {
+        free_pool_data(data);
+        return;
+    }
     size = send(input_socket, data->text, strlen(data->text), 0);
     if( size <= 0) {
         if(asprintf(&pool_result->result, "sending to socket failed : %s\n", strerror(errno)) == -1)
@@ -81,6 +92,7 @@ void thread_func(void *raw) {
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
+        free_pool_data(data);
         return;
     }
     if(data->text[strlen(data->text)-1] != '\n') {
@@ -95,6 +107,7 @@ void thread_func(void *raw) {
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
+        free_pool_data(data);
         return;
     }
     if(size < 16 && size > 0) {
@@ -103,6 +116,7 @@ void thread_func(void *raw) {
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
+        free_pool_data(data);
         return;
     }
     header[size] = '\0';
@@ -115,12 +129,14 @@ void thread_func(void *raw) {
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
+        free_pool_data(data);
         return;
     }
 
     strncpy(buffer, header+3, 13);
     result_size = atoi(buffer);
     if(result_size == 0) {
+        free_pool_data(data);
         return;
     }
 
@@ -140,6 +156,7 @@ void thread_func(void *raw) {
         free(result_string);
         close(input_socket);
         input_socket = -1;
+        free_pool_data(data);
         return;
     }
     result_string[total_read] = '\0';
@@ -150,9 +167,8 @@ void thread_func(void *raw) {
     pool_result->result  = result_string;
     pool_result->success = TRUE;
     threadpool_schedule_back(threadpool, main_func, pool_result);
-    free(data->socket);
-    free(data->text);
-    free(data);
+    free_pool_data(data);
+    return;
 }
 
 void wakeup(void *pp) {
@@ -185,6 +201,7 @@ int socket_pool_work(int poolsize, char ** data, int numdata, char ** pool_resul
         pool_data->key    = data[i+1];
         pool_data->socket = data[i+2];
         pool_data->text   = data[i+3];
+        free(data[i]);
         fd_set fdset;
         char buf[10];
         struct timeval tv = {0, 100};
