@@ -9,7 +9,7 @@ use utf8;
 use lib 'blib/lib';
 use lib 'blib/arch';
 
-use Test::More tests => 182;
+use Test::More tests => 190;
 use_ok('Thruk::Utils::XS');
 use_ok('Monitoring::Availability::Logs');
 
@@ -87,3 +87,5 @@ __DATA__
 [1264111946] SERVICE ALERT: n0_test_host_000;n0_test_pending_01;WARNING;SOFT;1;warn
 [1264111946] HOST ALERT: n0_test_host_000;DOWN;SOFT;1;down
 [1264111946] HOST ALERT: öüß;DOWN;SOFT;1;down
+[1261685289] HOST NOTIFICATION SUPPRESSED: hst;PING;Notifications are disabled globally.
+[1261685289] SERVICE NOTIFICATION SUPPRESSED: hst;Notifications are disabled globally.

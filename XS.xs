@@ -128,9 +128,9 @@ SV * parse_line(str)
             SV * _text_sv = newSVpv(_text, strlen(_text)-strlen(_options)); if(_utf8) { SvUTF8_on(_text_sv); }
             hv_store(result, "type",  4, _text_sv,   0);
             _options += 2;
-            if(   !strncmp(_text, "SERVICE ALERT", 13)
-               || !strncmp(_text, "CURRENT SERVICE STATE", 21)
-               || !strncmp(_text, "INITIAL SERVICE STATE", 21)
+            if(   !strncmp(_text, "SERVICE ALERT:", 14)
+               || !strncmp(_text, "CURRENT SERVICE STATE:", 22)
+               || !strncmp(_text, "INITIAL SERVICE STATE:", 22)
             ) {
                 _host          = strsep(&_options, ";");
                 _service       = strsep(&_options, ";");
@@ -151,9 +151,9 @@ SV * parse_line(str)
                 else if(!strncmp(_state, "UNKNOWN",  7)) { hv_store(result, "state",  5, newSVnv(3),   0); }
             }
             else
-            if(   !strncmp(_text, "HOST ALERT", 10)
-               || !strncmp(_text, "CURRENT HOST STATE", 18)
-               || !strncmp(_text, "INITIAL HOST STATE", 18)
+            if(   !strncmp(_text, "HOST ALERT:", 11)
+               || !strncmp(_text, "CURRENT HOST STATE:", 19)
+               || !strncmp(_text, "INITIAL HOST STATE:", 19)
             ) {
                 _host          = strsep(&_options, ";");
                 _state         = strsep(&_options, ";");
@@ -170,7 +170,7 @@ SV * parse_line(str)
                 else if(!strncmp(_state, "UNREACHABLE", 11)) { hv_store(result, "state",  5, newSVnv(2),   0); }
             }
             else
-            if(!strncmp(_text, "HOST DOWNTIME ALERT", 19)) {
+            if(!strncmp(_text, "HOST DOWNTIME ALERT:", 20)) {
                 _host          = strsep(&_options, ";");
                 _state         = strsep(&_options, ";");
                 SV * _hst_sv   = newSVpv(_host, strlen(_host));                   if(_utf8) { SvUTF8_on(_hst_sv); }
@@ -178,7 +178,7 @@ SV * parse_line(str)
                 hv_store(result, "start",      5, newSVnv(!strncmp(_state, "STARTED", 7) ? 1:0),   0);
             }
             else
-            if(!strncmp(_text, "SERVICE DOWNTIME ALERT", 19)) {
+            if(!strncmp(_text, "SERVICE DOWNTIME ALERT:", 23)) {
                 _host          = strsep(&_options, ";");
                 _service       = strsep(&_options, ";");
                 _state         = strsep(&_options, ";");
@@ -198,7 +198,7 @@ SV * parse_line(str)
                 hv_store(result, "to",           2, newSVpv(_to, strlen(_to)),   0);
             }
             else
-            if(!strncmp(_text, "SERVICE NOTIFICATION", 20)) {
+            if(!strncmp(_text, "SERVICE NOTIFICATION:", 21)) {
                 _contact       = strsep(&_options, ";");
                 _host          = strsep(&_options, ";");
                 _service       = strsep(&_options, ";");
@@ -215,7 +215,7 @@ SV * parse_line(str)
                 hv_store(result, "plugin_output",        13, _out_sv,  0);
             }
             else
-            if(!strncmp(_text, "HOST NOTIFICATION", 17)) {
+            if(!strncmp(_text, "HOST NOTIFICATION:", 18)) {
                 _contact       = strsep(&_options, ";");
                 _host          = strsep(&_options, ";");
                                  strsep(&_options, ";");
