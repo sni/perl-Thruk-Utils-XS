@@ -1,6 +1,6 @@
 package Thruk::Utils::XS;
 
-use 5.014002;
+use 5.010000;
 use strict;
 use warnings;
 use Carp qw/croak/;
