@@ -4381,10 +4381,12 @@ typedef OP* (CPERLscope(*Perl_check_t)) (pTHX_ OP*);
 #  undef isPRINT
 # endif
 
+#ifndef WIDEST_UTYPE
 #ifdef HAS_QUAD
 # define WIDEST_UTYPE U64TYPE
 #else
 # define WIDEST_UTYPE U32
+#endif
 #endif
 #ifndef isALNUMC
 #  define isALNUMC(c)                    (isALPHA(c) || isDIGIT(c))
@@ -7087,7 +7089,7 @@ DPPP_(my_my_snprintf)(char *buffer, const Size_t len, const char *format, ...)
 #endif
     va_end(ap);
     if (retval < 0 || (len > 0 && (Size_t)retval >= len))
-        Perl_croak(aTHX_ "panic: my_snprintf buffer overflow");
+        croak(aTHX_ "panic: my_snprintf buffer overflow");
     return retval;
 }
 

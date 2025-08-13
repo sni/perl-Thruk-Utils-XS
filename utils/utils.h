@@ -32,3 +32,5 @@ typedef struct pool_result_struct {
     int    success;
     char * result;
 } pool_result_t;
+
+int socket_pool_work(int, char **, int, char **);

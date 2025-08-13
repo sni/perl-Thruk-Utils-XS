@@ -1,4 +1,7 @@
 #include "./utils.h"
+#include "EXTERN.h"
+#include "perl.h"
+#include "XSUB.h"
 
 threadpool_t *threadpool;
 char ** pool_results_list;
@@ -29,14 +32,14 @@ int open_local_socket(pool_data_t * pool_data, pool_result_t * pool_result) {
 
     if (0 != stat(pool_data->socket, &st)) {
         if(asprintf(&pool_result->result, "unix socket %s does not exist\n", pool_data->socket) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         return(-1);
     }
 
     if((input_socket=socket (PF_LOCAL, SOCK_STREAM, 0)) <= 0) {
         if(asprintf(&pool_result->result, "creating socket failed: %s\n", strerror(errno)) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         return(-1);
     }
@@ -49,7 +52,7 @@ int open_local_socket(pool_data_t * pool_data, pool_result_t * pool_result) {
 
     if(!connect(input_socket, (struct sockaddr *) &address, sizeof (address)) == 0) {
         if(asprintf(&pool_result->result, "connecting socket failed: %s\n", strerror(errno)) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         return(-1);
@@ -88,7 +91,7 @@ void thread_func(void *raw) {
     size = send(input_socket, data->text, strlen(data->text), 0);
     if( size <= 0) {
         if(asprintf(&pool_result->result, "sending to socket failed : %s\n", strerror(errno)) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
@@ -103,7 +106,7 @@ void thread_func(void *raw) {
     size = read(input_socket, header, 16);
     if( size < 16) {
         if(asprintf(&pool_result->result, "reading socket failed (%d bytes read): %s\n", size, strerror(errno)) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
@@ -112,7 +115,7 @@ void thread_func(void *raw) {
     }
     if(size < 16 && size > 0) {
         if(asprintf(&pool_result->result, "got header: '%s'\n", header) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
@@ -125,7 +128,7 @@ void thread_func(void *raw) {
     return_code = atoi(buffer);
     if( return_code != 200) {
         if(asprintf(&pool_result->result, "query failed: %d\nquery:\n---\n%s\n---\n", return_code, data->text) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         close(input_socket);
         input_socket = -1;
@@ -151,7 +154,7 @@ void thread_func(void *raw) {
     }
     if( size <= 0 || total_read != result_size) {
         if(asprintf(&pool_result->result, "reading socket failed (%d bytes read, expected %d): %s\n", total_read, result_size, strerror(errno)) == -1)
-            Perl_croak("cannot allocate memory!");
+            croak("cannot allocate memory!");
         threadpool_schedule_back(threadpool, main_func, pool_result);
         free(result_string);
         close(input_socket);
